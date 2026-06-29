@@ -1,0 +1,22 @@
+# Carpetas temporales y de pruebas
+tmp/
+
+# Configuración/local de agentes o Codex
+.agents/
+
+# Acceso local, no necesario para GitHub Pages
+Abrir Cotizador Tesla.html
+
+# PDFs generados o de prueba
+*.pdf
+
+# Archivos temporales
+*.tmp
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Variables/configuración local
+.env
+.env.*

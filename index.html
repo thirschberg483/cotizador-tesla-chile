@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cotizador Tesla</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="quote-panel" aria-label="Cotizador Tesla">
+        <header class="topbar no-print">
+          <img class="brand" src="assets/tesla-wordmark.png" alt="Tesla">
+          <div class="trail">
+            <strong>Configurador</strong>
+            <span>Cotización</span>
+          </div>
+          <p>Esta barra no se imprime</p>
+        </header>
+
+        <section class="print-title print-only">
+          <img class="brand" src="assets/tesla-wordmark.png" alt="Tesla">
+          <div>
+            <p>Cotización comercial</p>
+            <h1 id="printClientTitle">Empresa Ejemplo SpA</h1>
+          </div>
+        </section>
+
+        <form id="quoteForm" class="quote-form">
+          <div class="grid line-bottom">
+            <label class="field span-2">
+              <span>Cliente</span>
+              <input id="client" name="client" type="text" value="Empresa Ejemplo SpA">
+            </label>
+            <label class="field">
+              <span>RUT</span>
+              <input id="rut" name="rut" type="text" value="76.543.210-K">
+            </label>
+            <label class="field">
+              <span>Fecha</span>
+              <input id="date" name="date" type="date" value="2026-06-19">
+            </label>
+          </div>
+
+          <div class="grid">
+            <label class="field">
+              <span>Modelo</span>
+              <select id="model" name="model"></select>
+            </label>
+            <label class="field span-2">
+              <span>Versión</span>
+              <select id="version" name="version"></select>
+            </label>
+            <label class="field">
+              <span>Cantidad</span>
+              <input id="quantity" name="quantity" type="number" min="1" step="1" value="1">
+            </label>
+          </div>
+
+          <div class="grid">
+            <label class="field">
+              <span>Color exterior</span>
+              <select id="paint" name="paint"></select>
+            </label>
+            <label class="field">
+              <span>Rines</span>
+              <select id="wheels" name="wheels"></select>
+            </label>
+            <label class="field">
+              <span>Interior</span>
+              <select id="interior" name="interior"></select>
+            </label>
+            <label class="field">
+              <span>Descuento / unidad (CLP)</span>
+              <input id="discount" name="discount" type="number" min="0" step="10000" value="7000000">
+            </label>
+          </div>
+
+          <section class="summary" aria-label="Resumen de cotización">
+            <div>
+              <span>Precio unitario</span>
+              <strong id="unitPrice">$0</strong>
+            </div>
+            <div>
+              <span>Subtotal</span>
+              <strong id="subtotal">$0</strong>
+            </div>
+            <div>
+              <span>Descuento total</span>
+              <strong id="totalDiscount">$0</strong>
+            </div>
+            <div class="total">
+              <span>Total cotizado</span>
+              <strong id="grandTotal">$0</strong>
+            </div>
+          </section>
+
+          <section class="terms line-bottom">
+            <label class="field">
+              <span>Validez de la oferta</span>
+              <input id="validity" name="validity" type="text" value="7 días corridos">
+            </label>
+            <label class="field">
+              <span>Condición de pago</span>
+              <input id="payment" name="payment" type="text" value="Transferencia bancaria">
+            </label>
+            <label class="field span-2">
+              <span>Notas comerciales</span>
+              <textarea id="notes" name="notes" rows="3">Precios y especificaciones sujetos a disponibilidad al momento de la compra.</textarea>
+            </label>
+          </section>
+
+          <footer class="quote-footer">
+            <p>Precios y especificaciones sincronizados manualmente desde tesla.com/es_CL.</p>
+            <span class="save-status no-print" id="saveStatus" role="status" aria-live="polite"></span>
+            <button class="save-button no-print" type="button" id="savePdf">Guardar PDF</button>
+          </footer>
+        </form>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
