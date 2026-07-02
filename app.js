@@ -70,7 +70,8 @@ const options = {
   ],
   interior: [
     { name: "Interior negro", price: 0, note: "Incluido" },
-    { name: "Interior blanco y negro", price: 1000000, note: "Opcional" }
+    { name: "Interior blanco y negro", price: 1000000, note: "Opcional" },
+    { name: "Gris Zen", price: 1000000, note: "Opcional" }
   ]
 };
 
@@ -185,6 +186,7 @@ let latestQuote = null;
 const saveStatus = document.querySelector("#saveStatus");
 const ORDER_FEE = 300000;
 const DOCUMENTATION_FEE = 100000;
+const FIXED_DISCOUNT = 7000000;
 
 function optionLabel(item, includedText = "incluido") {
   const label = item.note || includedText;
@@ -258,6 +260,11 @@ function specValue(specs, key, fallback = "-") {
   return specs[key] || fallback;
 }
 
+function extendedMirrorWidth(value) {
+  const match = String(value || "").match(/espejos extendidos:\s*([^;]+)/i);
+  return match ? match[1].trim() : value || "-";
+}
+
 function accelerationValue(value) {
   const match = String(value || "").match(/en\s+([\d,]+)\s*s/i);
   return match ? `${match[1]} s` : value || "-";
@@ -282,7 +289,7 @@ function calculate() {
   const wheels = selected(fields.wheels, version.wheels);
   const interior = selected(fields.interior, options.interior);
   const quantity = Math.max(1, Number(fields.quantity.value) || 1);
-  const discount = Math.max(0, Number(fields.discount.value) || 0);
+  const discount = FIXED_DISCOUNT;
   const specs = specsFor(fields.model.value, version.name);
   const propulsión = specValue(specs, "Propulsión", version.name.includes("AWD") ? "Dual Motor All-Wheel Drive" : "Rear-Wheel Drive");
 
@@ -295,6 +302,7 @@ function calculate() {
   totals.subtotal.textContent = CLP.format(subtotal);
   totals.totalDiscount.textContent = `-${CLP.format(totalDiscount)}`;
   totals.grandTotal.textContent = CLP.format(grandTotal);
+  fields.discount.value = CLP.format(FIXED_DISCOUNT);
   fields.printClientTitle.textContent = fields.client.value || "Cliente";
 
   latestQuote = {
@@ -314,9 +322,6 @@ function calculate() {
     interior: interior.name,
     quantity,
     discount,
-    validity: document.querySelector("#validity").value || "",
-    payment: document.querySelector("#payment").value || "",
-    notes: document.querySelector("#notes").value || "",
     basePrice: version.price,
     paintPrice: paint.price,
     wheelsPrice: wheels.price,
@@ -408,6 +413,16 @@ function createPdfBlob(quote) {
       content.push(`BT ${color} rg /${font} ${size} Tf ${x} ${yy} Td ${pdfLiteral(value)} Tj ET`);
     };
 
+    const richText = (segments, x, yy, size = 10, color = "0.10 0.11 0.14", defaultFont = "F1") => {
+      const commands = [`BT ${color} rg ${x} ${yy} Td`];
+      segments.forEach((segment) => {
+        const item = typeof segment === "string" ? { value: segment } : segment;
+        commands.push(`/${item.font || defaultFont} ${item.size || size} Tf ${pdfLiteral(item.value)} Tj`);
+      });
+      commands.push("ET");
+      content.push(commands.join(" "));
+    };
+
     const textRotated = (value, x, yy, angleDegrees, size = 10, color = "0.10 0.11 0.14", font = "F1") => {
       const angle = angleDegrees * Math.PI / 180;
       const cos = Math.cos(angle).toFixed(4);
@@ -443,7 +458,7 @@ function createPdfBlob(quote) {
       text(subtitle, left + 200, 720, 17, "0.62 0.63 0.68");
     }
 
-    drawBody({ text, textRotated, line, rect, label, money });
+    drawBody({ text, richText, textRotated, line, rect, label, money });
 
     if (pageNumber === 1) {
       textRotated("REFERENCIAL", 150, 315, 30, 58, "0.73 0.74 0.80", "F2");
@@ -503,6 +518,11 @@ function createPdfBlob(quote) {
         amount: quote.basePrice * quote.quantity
       }
     ];
+    const optionConcept = (group, name) => {
+      const cleanName = String(name || "");
+      return cleanName.toLowerCase().startsWith(`${group.toLowerCase()} `) ? cleanName : `${group} ${cleanName}`;
+    };
+
     [
       ["Color exterior", quote.paint, quote.paintPrice],
       ["Rines", quote.wheels, quote.wheelsPrice],
@@ -510,7 +530,7 @@ function createPdfBlob(quote) {
     ].forEach(([group, name, price]) => {
       if (price > 0) {
         detailRows.push({
-          concept: `${group} ${name}`,
+          concept: optionConcept(group, name),
           detail: `${group} - opción`,
           qty: quote.quantity,
           unit: price,
@@ -534,7 +554,7 @@ function createPdfBlob(quote) {
     const conditions = [
       "Valores expresados en pesos chilenos (CLP) con IVA incluido.",
       "Libre de impuesto verde y de impuesto al lujo.",
-      "Permiso de circulación y costo de inscripción no incluidos.",
+      "Permiso de circulación no incluido.",
       "Unidad equipada con pisos de alfombra.",
       "Configuración y disponibilidad según catálogo de flota vigente."
     ];
@@ -553,7 +573,7 @@ function createPdfBlob(quote) {
     text(`-${money(quote.totalDiscount)}`, amountX, 144, 10, "0.10 0.11 0.14", "F2");
     text("Costo de orden", sumX, 122, 9.4, "0.35 0.36 0.42");
     text(money(quote.orderFee), amountX, 122, 10, "0.10 0.11 0.14", "F2");
-    text("Tarifa de documentación", sumX, 100, 9.4, "0.35 0.36 0.42");
+    text("Costo de inscripción", sumX, 100, 9.4, "0.35 0.36 0.42");
     text(money(quote.documentationFee), amountX, 100, 10, "0.10 0.11 0.14", "F2");
     line(sumX, 88, right, 88, "0.10 0.11 0.14", 0.8);
     text("TOTAL", sumX, 64, 12, "0.10 0.11 0.14", "F2");
@@ -602,7 +622,7 @@ function createPdfBlob(quote) {
       ["Rines", spec("Rines técnicos")],
       ["Longitud total", spec("Longitud total")],
       ["Altura total", spec("Altura total")],
-      ["Ancho total", spec("Ancho total")],
+      ["Ancho (con espejos)", extendedMirrorWidth(spec("Ancho total"))],
       ["Carga", spec("Carga")],
       ["Altura libre", spec("Altura libre sobre el suelo")]
     ];
@@ -619,11 +639,19 @@ function createPdfBlob(quote) {
 
   });
 
-  createPage("Instrucciones de pago", "", 3, ({ text, line }) => {
+  createPage("Instrucciones de pago", "", 3, ({ text, richText, line }) => {
     text("Transferencia bancaria", left, 636, 12, "0.10 0.11 0.14", "F2");
-    const transfer = "El saldo total se debe liquidar al menos 5 días hábiles antes de su entrega por medio de una transferencia a la cuenta indicada. De esta forma podremos confirmar el pago, preparar la documentación y gestionar todos los trámites requeridos para su entrega.";
-    wrapText(transfer, 76).forEach((lineText, index) => {
-      text(lineText, left, 614 - index * 14, 9.5, "0.35 0.36 0.42");
+    richText([
+      "El saldo total se debe liquidar al menos ",
+      { value: "5 días hábiles antes", font: "F2" },
+      " de su entrega por medio de una"
+    ], left, 614, 9.5, "0.35 0.36 0.42");
+    [
+      "transferencia a la cuenta indicada. De esta forma podremos confirmar el pago,",
+      "preparar la documentación y gestionar todos los trámites",
+      "requeridos para su entrega."
+    ].forEach((lineText, index) => {
+      text(lineText, left, 600 - index * 14, 9.5, "0.35 0.36 0.42");
     });
 
     const bankRows = [
@@ -639,6 +667,19 @@ function createPdfBlob(quote) {
       line(left, bankY - 11, 390, bankY - 11, "0.86 0.87 0.90");
       bankY -= 26;
     });
+
+    text("Envío del comprobante", left, 368, 12, "0.10 0.11 0.14", "F2");
+    text("Luego de realizar el pago mediante cheque o vale vista, se deberá enviar el", left, 342, 9.5, "0.35 0.36 0.42");
+    richText([
+      "comprobante al correo ",
+      { value: "pagoschile@tesla.com", font: "F2" },
+      ". Para facilitar la identificación del pago,"
+    ], left, 328, 9.5, "0.35 0.36 0.42");
+    richText([
+      "el asunto del correo debe incluir el número de reserva, por ejemplo: ",
+      { value: "RN123456789", font: "F2" },
+      "."
+    ], left, 314, 9.5, "0.35 0.36 0.42");
   });
 
   const pageCount = pages.length;
