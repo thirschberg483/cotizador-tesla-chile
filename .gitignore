@@ -20,3 +20,8 @@ Thumbs.db
 # Variables/configuración local
 .env
 .env.*
+
+# Archivos locales / temporales
+tmp/
+.agents/
+Abrir Cotizador Tesla.html
