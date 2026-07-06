@@ -413,6 +413,18 @@ function createPdfBlob(quote) {
       content.push(`BT ${color} rg /${font} ${size} Tf ${x} ${yy} Td ${pdfLiteral(value)} Tj ET`);
     };
 
+    const textWidth = (value, size) => String(value || "").split("").reduce((total, char) => {
+      if (char === " ") return total + size * 0.28;
+      if (/[.,:'"|-]/.test(char)) return total + size * 0.25;
+      if (/[0-9$]/.test(char)) return total + size * 0.56;
+      if (/[A-ZÁÉÍÓÚÜÑ]/.test(char)) return total + size * 0.64;
+      return total + size * 0.50;
+    }, 0);
+
+    const textCentered = (value, centerX, yy, size = 10, color = "0.10 0.11 0.14", font = "F1") => {
+      text(value, centerX - textWidth(value, size) / 2, yy, size, color, font);
+    };
+
     const richText = (segments, x, yy, size = 10, color = "0.10 0.11 0.14", defaultFont = "F1") => {
       const commands = [`BT ${color} rg ${x} ${yy} Td`];
       segments.forEach((segment) => {
@@ -449,6 +461,7 @@ function createPdfBlob(quote) {
     };
 
     const label = (value, x, y) => text(String(value).toUpperCase(), x, y, 7.5, "0.60 0.61 0.66", "F2");
+    const labelCentered = (value, centerX, y) => textCentered(String(value).toUpperCase(), centerX, y, 7.5, "0.60 0.61 0.66", "F2");
     const money = (value) => CLP.format(value);
 
     image("Logo", left, 731, 160, 16.5);
@@ -458,7 +471,7 @@ function createPdfBlob(quote) {
       text(subtitle, left + 200, 720, 17, "0.62 0.63 0.68");
     }
 
-    drawBody({ text, richText, textRotated, line, rect, label, money });
+    drawBody({ text, textCentered, richText, textRotated, line, rect, label, labelCentered, money });
 
     if (pageNumber === 1) {
       textRotated("REFERENCIAL", 150, 315, 30, 58, "0.73 0.74 0.80", "F2");
@@ -475,7 +488,7 @@ function createPdfBlob(quote) {
     pages.push(content.join("\n"));
   }
 
-  createPage("Cotización", "", 1, ({ text, textRotated, line, rect, label, money }) => {
+  createPage("Cotización", "", 1, ({ text, textCentered, textRotated, line, rect, label, labelCentered, money }) => {
     label("Cliente", left, 686);
     text(quote.client, left, 670, 12, "0.10 0.11 0.14", "F2");
     label("RUT", 318, 686);
@@ -504,9 +517,12 @@ function createPdfBlob(quote) {
 
     label("Detalle", left, 372);
     label("Concepto", left, 346);
-    label("Cant.", 326, 346);
-    label("Precio unitario", 384, 346);
-    label("Importe", 504, 346);
+    const quantityCenterX = 337;
+    const unitPriceCenterX = 419;
+    const amountCenterX = 521;
+    labelCentered("Cant.", quantityCenterX, 346);
+    labelCentered("Precio unitario", unitPriceCenterX, 346);
+    labelCentered("Importe", amountCenterX, 346);
     line(left, 338, right, 338, "0.80 0.81 0.84");
 
     const detailRows = [
@@ -539,18 +555,46 @@ function createPdfBlob(quote) {
       }
     });
 
-    let rowY = 316;
+    const compactDetailRows = detailRows.length > 3;
+    const rowHeight = compactDetailRows ? 38 : 44;
+    const conceptSize = compactDetailRows ? 8.7 : 9.8;
+    const detailSize = compactDetailRows ? 7.8 : 8.6;
+    const valueSize = compactDetailRows ? 9.1 : 10;
+    const conceptGap = compactDetailRows ? 9.4 : 11;
+    const detailGap = compactDetailRows ? 9 : 10;
+    const textVisualOffset = (size) => size * 0.34;
+    let rowTop = 338;
+
     detailRows.forEach((row) => {
-      text(row.concept, left, rowY, 9.8, "0.10 0.11 0.14", "F2");
-      text(row.detail, left, rowY - 13, 8.6, "0.36 0.37 0.42");
-      text(row.qty, 342, rowY, 10);
-      text(money(row.unit), 404, rowY, 10);
-      text(money(row.amount), 506, rowY, 10);
-      line(left, rowY - 24, right, rowY - 24, "0.88 0.89 0.91");
-      rowY -= 44;
+      const conceptLines = wrapText(row.concept, compactDetailRows ? 42 : 34).slice(0, compactDetailRows ? 2 : 1);
+      const detailLines = wrapText(row.detail, compactDetailRows ? 50 : 42).slice(0, compactDetailRows ? 1 : 2);
+      const rowBottom = rowTop - rowHeight;
+      const rowCenter = (rowTop + rowBottom) / 2;
+      const lineGaps = [];
+      for (let index = 1; index < conceptLines.length; index += 1) lineGaps.push(conceptGap);
+      if (detailLines.length) lineGaps.push(conceptGap);
+      for (let index = 1; index < detailLines.length; index += 1) lineGaps.push(detailGap);
+
+      const totalTextGap = lineGaps.reduce((total, gap) => total + gap, 0);
+      let textY = rowCenter - textVisualOffset(conceptSize) + totalTextGap / 2;
+
+      conceptLines.forEach((lineText, index) => {
+        text(lineText, left, textY, conceptSize, "0.10 0.11 0.14", "F2");
+        textY -= index < conceptLines.length - 1 ? conceptGap : conceptGap;
+      });
+      detailLines.forEach((lineText, index) => {
+        text(lineText, left, textY, detailSize, "0.36 0.37 0.42");
+        textY -= index < detailLines.length - 1 ? detailGap : 0;
+      });
+      const valueY = rowCenter - textVisualOffset(valueSize);
+      textCentered(row.qty, quantityCenterX, valueY, valueSize);
+      textCentered(money(row.unit), unitPriceCenterX, valueY, valueSize);
+      textCentered(money(row.amount), amountCenterX, valueY, valueSize);
+      line(left, rowBottom, right, rowBottom, "0.88 0.89 0.91");
+      rowTop = rowBottom;
     });
 
-    label("Condiciones", left, 172);
+    label("Condiciones", left, 154);
     const conditions = [
       "Valores expresados en pesos chilenos (CLP) con IVA incluido.",
       "Libre de impuesto verde y de impuesto al lujo.",
@@ -558,7 +602,7 @@ function createPdfBlob(quote) {
       "Unidad equipada con pisos de alfombra.",
       "Configuración y disponibilidad según catálogo de flota vigente."
     ];
-    let conditionY = 148;
+    let conditionY = 132;
     conditions.forEach((condition) => {
       text("-", left, conditionY, 9, "0.24 0.25 0.29");
       wrapText(condition, 52).forEach((lineText, index) => text(lineText, left + 12, conditionY - index * 12, 8.4, "0.35 0.36 0.42"));
