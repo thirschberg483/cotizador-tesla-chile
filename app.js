@@ -10,8 +10,26 @@ const TESLA_WORDMARK_HEIGHT = 64;
 const catalog = {
   "Model 3": [
     {
+      name: "Rear-Wheel Drive",
+      price: 29900000,
+      autonomy: "534 km",
+      wheels: [
+        { name: "Rines 18\"", price: 0, note: "Incluidos" },
+        { name: "Rines 19\"", price: 1250000, note: "Opcional" }
+      ]
+    },
+    {
+      name: "Premium Long Range Rear-Wheel Drive 750 km",
+      price: 34900000,
+      autonomy: "750 km",
+      wheels: [
+        { name: "Rines 18\"", price: 0, note: "Incluidos" },
+        { name: "Rines 19\"", price: 1250000, note: "Opcional" }
+      ]
+    },
+    {
       name: "Premium Rear-Wheel Drive",
-      price: 39900000,
+      price: 32900000,
       autonomy: "520 km",
       wheels: [
         { name: "Rines 18\"", price: 0, note: "Incluidos" },
@@ -20,7 +38,7 @@ const catalog = {
     },
     {
       name: "Premium Long Range AWD",
-      price: 44900000,
+      price: 37900000,
       autonomy: "660 km",
       wheels: [
         { name: "Rines 18\"", price: 0, note: "Incluidos" },
@@ -29,7 +47,7 @@ const catalog = {
     },
     {
       name: "Performance AWD",
-      price: 49900000,
+      price: 42900000,
       autonomy: "571 km",
       wheels: [
         { name: "Rines 20\"", price: 0, note: "Única opción / incluidos" }
@@ -38,8 +56,17 @@ const catalog = {
   ],
   "Model Y": [
     {
+      name: "Premium Long Range Rear-Wheel Drive",
+      price: 39900000,
+      autonomy: "661 km",
+      wheels: [
+        { name: "Rines 19\"", price: 0, note: "Incluidos" },
+        { name: "Rines 20\"", price: 1500000, note: "Opcional" }
+      ]
+    },
+    {
       name: "Premium Rear-Wheel Drive",
-      price: 43900000,
+      price: 36900000,
       autonomy: "466 km",
       wheels: [
         { name: "Rines 19\"", price: 0, note: "Incluidos" },
@@ -48,7 +75,7 @@ const catalog = {
     },
     {
       name: "Premium Long Range AWD",
-      price: 48900000,
+      price: 41900000,
       autonomy: "600 km",
       wheels: [
         { name: "Rines 19\"", price: 0, note: "Incluidos" },
@@ -186,7 +213,7 @@ let latestQuote = null;
 const saveStatus = document.querySelector("#saveStatus");
 const ORDER_FEE = 300000;
 const DOCUMENTATION_FEE = 100000;
-const FIXED_DISCOUNT = 7000000;
+const FIXED_DISCOUNT = 0;
 
 function optionLabel(item, includedText = "incluido") {
   const label = item.note || includedText;
@@ -219,15 +246,17 @@ function fillModels() {
 }
 
 function fillVersions() {
-  const versions = catalog[fields.model.value];
+  const versions = catalog[fields.model.value]
+    .map((version, index) => ({ version, index }))
+    .sort((a, b) => a.version.price - b.version.price || a.index - b.index);
   fields.version.innerHTML = "";
-  versions.forEach((version, index) => {
+  versions.forEach(({ version, index }) => {
     const option = document.createElement("option");
     option.value = String(index);
     option.textContent = `${version.name} (${CLP.format(version.price)} - ${version.autonomy} WLTP)`;
     fields.version.append(option);
   });
-  fields.version.value = "0";
+  fields.version.value = versions.length ? String(versions[0].index) : "0";
   fillConfigurationOptions();
 }
 
@@ -253,7 +282,12 @@ function formatQuoteDate(value) {
 }
 
 function specsFor(model, versionName) {
-  return technicalSpecs[model]?.[versionName] || {};
+  const modelSpecs = technicalSpecs[model] || {};
+  if (modelSpecs[versionName]) return modelSpecs[versionName];
+  if (String(versionName || "").includes("Rear-Wheel Drive")) {
+    return modelSpecs["Premium Rear-Wheel Drive"] || {};
+  }
+  return {};
 }
 
 function specValue(specs, key, fallback = "-") {
