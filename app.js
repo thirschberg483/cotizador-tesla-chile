@@ -681,14 +681,21 @@ function createPdfBlob(quote) {
 
     const sumX = 318;
     const amountX = 494;
-    text("Subtotal vehículo y opciones", sumX, 166, 9.4, "0.35 0.36 0.42");
-    text(money(quote.subtotal), amountX, 166, 10, "0.10 0.11 0.14", "F2");
-    text("Descuento", sumX, 144, 9.4, "0.35 0.36 0.42");
-    text(`-${money(quote.totalDiscount)}`, amountX, 144, 10, "0.10 0.11 0.14", "F2");
-    text("Costo de orden", sumX, 122, 9.4, "0.35 0.36 0.42");
-    text(money(quote.orderFee), amountX, 122, 10, "0.10 0.11 0.14", "F2");
-    text("Costo de inscripción", sumX, 100, 9.4, "0.35 0.36 0.42");
-    text(money(quote.documentationFee), amountX, 100, 10, "0.10 0.11 0.14", "F2");
+    const summaryRows = [
+      ["Subtotal vehículo y opciones", money(quote.subtotal)]
+    ];
+    if (quote.totalDiscount > 0) {
+      summaryRows.push(["Descuento", `-${money(quote.totalDiscount)}`]);
+    }
+    summaryRows.push(
+      ["Costo de orden", money(quote.orderFee)],
+      ["Costo de inscripción", money(quote.documentationFee)]
+    );
+    summaryRows.forEach(([summaryLabel, summaryValue], index) => {
+      const y = 166 - index * 22;
+      text(summaryLabel, sumX, y, 9.4, "0.35 0.36 0.42");
+      text(summaryValue, amountX, y, 10, "0.10 0.11 0.14", "F2");
+    });
     line(sumX, 88, right, 88, "0.10 0.11 0.14", 0.8);
     text("TOTAL", sumX, 64, 12, "0.10 0.11 0.14", "F2");
     text(money(quote.grandTotal), 374, 62, 20, "0.10 0.11 0.14", "F2");
