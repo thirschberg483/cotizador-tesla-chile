@@ -104,6 +104,30 @@ const options = {
 
 const technicalSpecs = {
   "Model 3": {
+    "Rear-Wheel Drive": {
+      "Propulsión": "Rear-Wheel Drive",
+      "Aceleración 0-100 km/h": "0 a 100 km/h en 6,2 s",
+      "Peso (masa en vacío)": "1.768 kg",
+      "Carga": "682 litros",
+      "Rines técnicos": "18\"",
+      "Asientos": "5 adultos",
+      "Altura libre sobre el suelo": "138 mm",
+      "Ancho total": "Espejos plegados: 1.933 mm; espejos extendidos: 2.089 mm",
+      "Altura total": "1.440 mm",
+      "Longitud total": "4.720 mm"
+    },
+    "Premium Long Range Rear-Wheel Drive 750 km": {
+      "Propulsión": "Rear-Wheel Drive",
+      "Aceleración 0-100 km/h": "0 a 100 km/h en 5,2 s",
+      "Peso (masa en vacío)": "1.747 kg",
+      "Carga": "682 litros",
+      "Rines técnicos": "18\" o 19\"",
+      "Asientos": "5 adultos",
+      "Altura libre sobre el suelo": "138 mm",
+      "Ancho total": "Espejos plegados: 1.933 mm; espejos extendidos: 2.089 mm",
+      "Altura total": "1.441 mm",
+      "Longitud total": "4.720 mm"
+    },
     "Premium Rear-Wheel Drive": {
       "Propulsión": "Rear-Wheel Drive",
       "Aceleración 0-100 km/h": "0 a 100 km/h en 6,1 s",
@@ -154,6 +178,18 @@ const technicalSpecs = {
     }
   },
   "Model Y": {
+    "Premium Long Range Rear-Wheel Drive": {
+      "Propulsión": "Rear-Wheel Drive",
+      "Aceleración 0-100 km/h": "0 a 100 km/h en 5,6 s",
+      "Peso (masa en vacío)": "1.901 kg",
+      "Carga": "2.138 litros",
+      "Rines técnicos": "19\" o 20\"",
+      "Asientos": "Hasta 5 adultos",
+      "Altura libre sobre el suelo": "167 mm",
+      "Ancho total": "Espejos plegados: 1.982 mm; espejos extendidos: 2.129 mm",
+      "Altura total": "1.624 mm",
+      "Longitud total": "4.790 mm"
+    },
     "Premium Rear-Wheel Drive": {
       "Propulsión": "Rear-Wheel Drive",
       "Aceleración 0-100 km/h": "0 a 100 km/h en 5,9 s",
